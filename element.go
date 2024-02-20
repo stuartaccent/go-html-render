@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -67,10 +68,11 @@ func (e *HTMLElement) renderAttributes() string {
 	return strings.Join(attrs, " ")
 }
 
-func (e *HTMLElement) Render(sb *strings.Builder, depth int, minify bool) {
+func (e *HTMLElement) Render(w io.Writer, depth int, minify bool) {
 	newLine := "\n"
 	indent := strings.Repeat("  ", depth)
 	textIndent := strings.Repeat("  ", depth+1)
+	tagFormat := "%s<%s%s%s%s>%s"
 	if minify {
 		newLine = ""
 		indent = ""
@@ -87,18 +89,16 @@ func (e *HTMLElement) Render(sb *strings.Builder, depth int, minify bool) {
 		id = fmt.Sprintf(` id="%s"`, id)
 	}
 
-	tagFormat := "%s<%s%s%s%s>%s"
-
 	if e.SelfClosing {
-		sb.WriteString(fmt.Sprintf(tagFormat, indent, e.TagName, id, attrs, "/", newLine))
+		fmt.Fprintf(w, tagFormat, indent, e.TagName, id, attrs, "/", newLine)
 	} else {
-		sb.WriteString(fmt.Sprintf(tagFormat, indent, e.TagName, id, attrs, "", newLine))
+		fmt.Fprintf(w, tagFormat, indent, e.TagName, id, attrs, "", newLine)
 		if e.Text != "" {
-			sb.WriteString(fmt.Sprintf("%s%s%s", textIndent, e.Text, newLine))
+			fmt.Fprintf(w, "%s%s%s", textIndent, e.Text, newLine)
 		}
 		for _, child := range e.Children {
-			child.Render(sb, depth+1, minify)
+			child.Render(w, depth+1, minify)
 		}
-		sb.WriteString(fmt.Sprintf("%s</%s>%s", indent, e.TagName, newLine))
+		fmt.Fprintf(w, "%s</%s>%s", indent, e.TagName, newLine)
 	}
 }

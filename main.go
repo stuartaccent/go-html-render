@@ -1,75 +1,67 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
-	"strings"
-	"time"
+	"net/http"
 )
 
-func Html() *HTMLElement  { return NewHTMLElement("html") }
-func Head() *HTMLElement  { return NewHTMLElement("head") }
-func Body() *HTMLElement  { return NewHTMLElement("body") }
-func Title() *HTMLElement { return NewHTMLElement("title") }
-func Div() *HTMLElement   { return NewHTMLElement("div") }
-func Image() *HTMLElement { return NewHTMLElement("image").Closing() }
+func Html() *HTMLElement   { return NewHTMLElement("html") }
+func Head() *HTMLElement   { return NewHTMLElement("head") }
+func Title() *HTMLElement  { return NewHTMLElement("title") }
+func Script() *HTMLElement { return NewHTMLElement("script") }
+func Body() *HTMLElement   { return NewHTMLElement("body") }
+func Div() *HTMLElement    { return NewHTMLElement("div") }
+func Image() *HTMLElement  { return NewHTMLElement("image").Closing() }
 
-func timeTaken(start time.Time, name string) {
-	elapsed := time.Since(start)
-	log.Printf("%s took %s", name, elapsed)
-}
-
-func main() {
-	defer timeTaken(time.Now(), "main")
-	doc := Html().
+var (
+	root = Html().
 		SetChildren(
 			Head().
 				SetChildren(
 					Title().SetText("Example Page"),
+					Script().
+						SetAttributes(A{
+							"src":         "https://unpkg.com/htmx.org@1.9.10",
+							"integrity":   "sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC",
+							"crossorigin": "anonymous",
+						}),
 				),
 			Body().
+				SetClasses(
+					"container",
+					"mx-auto",
+					"px-4",
+				).
 				SetChildren(
 					Div().
-						SetID("content").
+						SetID("hello").
 						SetAttributes(A{
-							"hx-get":     "/get-me-some-sugar",
-							"hx-trigger": "load",
+							"hx-get":     "/hello",
+							"hx-trigger": "load delay:0.3s",
 						}).
-						SetClasses(
-							"container",
-							"mx-auto",
-							"px-4",
-						).
 						SetChildren(
 							Div().
 								SetClasses("htmx-indicator").
 								SetText("Loading..."),
 						),
 					Image().
-						SetClasses("w-96").
-						SetAttributes(A{"src": "https://example.com/image.png"}),
+						SetAttributes(A{
+							"src":   "https://picsum.photos/800/600",
+							"width": "800",
+						}),
 				),
 		)
 
-	// render the document
-	var sb strings.Builder
-	doc.Render(&sb, 0, false)
-	fmt.Println(sb.String())
+	hello = Div().SetText("Hello, World!")
+)
 
-	// Output json:
-	jsonBytes, err := json.MarshalIndent(doc, "", "  ")
-	if err != nil {
-		fmt.Println("Error serializing to JSON:", err)
-		return
-	}
-	fmt.Println(string(jsonBytes))
-
-	// Deserialize JSON back into the struct
-	var root HTMLElement
-	err = json.Unmarshal(jsonBytes, &root)
-	if err != nil {
-		fmt.Println("Error deserializing JSON:", err)
-		return
-	}
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		root.Render(w, 0, true)
+	})
+	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		hello.Render(w, 0, true)
+	})
+	log.Println("Listening on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

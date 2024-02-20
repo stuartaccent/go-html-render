@@ -27,18 +27,24 @@ func NewHTMLElement(tagName string) *HTMLElement {
 	}
 }
 
-func (e *HTMLElement) SetChildren(children ...*HTMLElement) *HTMLElement {
-	e.Children = children
+func (e *HTMLElement) AddChildren(children ...*HTMLElement) *HTMLElement {
+	for _, child := range children {
+		e.Children = append(e.Children, child)
+	}
 	return e
 }
 
-func (e *HTMLElement) SetAttributes(attributes A) *HTMLElement {
-	e.Attributes = attributes
+func (e *HTMLElement) AddAttributes(attributes A) *HTMLElement {
+	for key, attribute := range attributes {
+		e.Attributes[key] = attribute
+	}
 	return e
 }
 
-func (e *HTMLElement) SetClasses(classes ...string) *HTMLElement {
-	e.Classes = classes
+func (e *HTMLElement) AddClasses(classes ...string) *HTMLElement {
+	for _, class := range classes {
+		e.Classes = append(e.Classes, class)
+	}
 	return e
 }
 
@@ -58,47 +64,45 @@ func (e *HTMLElement) Closing() *HTMLElement {
 }
 
 func (e *HTMLElement) renderAttributes() string {
-	var attrs []string
+	var builder strings.Builder
+	if e.ID != "" {
+		fmt.Fprintf(&builder, `id="%s" `, e.ID)
+	}
 	if len(e.Classes) > 0 {
-		attrs = append(attrs, fmt.Sprintf(`class="%s"`, strings.Join(e.Classes, " ")))
+		fmt.Fprintf(&builder, `class="%s" `, strings.Join(e.Classes, " "))
 	}
 	for key, value := range e.Attributes {
-		attrs = append(attrs, fmt.Sprintf(`%s="%s"`, key, value))
+		fmt.Fprintf(&builder, `%s="%s" `, key, value)
 	}
-	return strings.Join(attrs, " ")
+	attrStr := builder.String()
+	return strings.TrimSpace(attrStr)
 }
 
 func (e *HTMLElement) Render(w io.Writer, depth int, minify bool) {
-	newLine := "\n"
-	indent := strings.Repeat("  ", depth)
-	textIndent := strings.Repeat("  ", depth+1)
-	tagFormat := "%s<%s%s%s%s>%s"
+	delimeter, indent, textIndent := "\n", strings.Repeat("  ", depth), strings.Repeat("  ", depth+1)
 	if minify {
-		newLine = ""
-		indent = ""
-		textIndent = ""
+		delimeter, indent, textIndent = "", "", ""
 	}
 
 	attrs := e.renderAttributes()
-	if attrs != "" {
+	if len(attrs) > 0 {
 		attrs = " " + attrs
 	}
+	tagClosure := ">"
+	if e.SelfClosing {
+		tagClosure = "/>"
+	}
+	fmt.Fprintf(w, "%s<%s%s%s%s", indent, e.TagName, attrs, tagClosure, delimeter)
 
-	id := e.ID
-	if id != "" {
-		id = fmt.Sprintf(` id="%s"`, id)
+	if !e.SelfClosing && e.Text != "" {
+		fmt.Fprintf(w, "%s%s%s", textIndent, e.Text, delimeter)
 	}
 
-	if e.SelfClosing {
-		fmt.Fprintf(w, tagFormat, indent, e.TagName, id, attrs, "/", newLine)
-	} else {
-		fmt.Fprintf(w, tagFormat, indent, e.TagName, id, attrs, "", newLine)
-		if e.Text != "" {
-			fmt.Fprintf(w, "%s%s%s", textIndent, e.Text, newLine)
-		}
-		for _, child := range e.Children {
-			child.Render(w, depth+1, minify)
-		}
-		fmt.Fprintf(w, "%s</%s>%s", indent, e.TagName, newLine)
+	for _, child := range e.Children {
+		child.Render(w, depth+1, minify)
+	}
+
+	if !e.SelfClosing {
+		fmt.Fprintf(w, "%s</%s>%s", indent, e.TagName, delimeter)
 	}
 }

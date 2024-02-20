@@ -20,32 +20,32 @@ func Image() *HTMLElement { return NewHTMLElement("image").Closing() }
 Set the attributes and children of the elements using the provided functions.
 ```go
 doc := Html().
-    SetChildren(
+    AddChildren(
         Head().
-            SetChildren(
+            AddChildren(
                 Title().SetText("Example Page"),
             ),
         Body().
-            SetChildren(
+            AddChildren(
                 Div().
                     SetID("content").
-                    SetAttributes(A{
+                    AddAttributes(A{
                         "hx-get":     "/get-me-some-sugar",
                         "hx-trigger": "load",
                     }).
-                    SetClasses(
+                    AddClasses(
                         "container",
                         "mx-auto",
                         "px-4",
                     ).
-                    SetChildren(
+                    AddChildren(
                         Div().
-                            SetClasses("htmx-indicator").
+                            AddClasses("htmx-indicator").
                             SetText("Loading..."),
                     ),
                 Image().
-                    SetClasses("w-96").
-                    SetAttributes(A{"src": "https://example.com/image.png"}),
+                    AddClasses("w-96").
+                    AddAttributes(A{"src": "https://example.com/image.png"}),
             ),
     )
 

@@ -15,37 +15,37 @@ func Image() *HTMLElement  { return NewHTMLElement("image").Closing() }
 
 var (
 	root = Html().
-		SetChildren(
+		AddChildren(
 			Head().
-				SetChildren(
+				AddChildren(
 					Title().SetText("Example Page"),
 					Script().
-						SetAttributes(A{
+						AddAttributes(A{
 							"src":         "https://unpkg.com/htmx.org@1.9.10",
 							"integrity":   "sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC",
 							"crossorigin": "anonymous",
 						}),
 				),
 			Body().
-				SetClasses(
+				AddClasses(
 					"container",
 					"mx-auto",
 					"px-4",
 				).
-				SetChildren(
+				AddChildren(
 					Div().
 						SetID("hello").
-						SetAttributes(A{
+						AddAttributes(A{
 							"hx-get":     "/hello",
 							"hx-trigger": "load delay:0.3s",
 						}).
-						SetChildren(
+						AddChildren(
 							Div().
-								SetClasses("htmx-indicator").
+								AddClasses("htmx-indicator").
 								SetText("Loading..."),
 						),
 					Image().
-						SetAttributes(A{
+						AddAttributes(A{
 							"src":   "https://picsum.photos/800/600",
 							"width": "800",
 						}),

@@ -28,9 +28,7 @@ func NewHTMLElement(tagName string) *HTMLElement {
 }
 
 func (e *HTMLElement) AddChildren(children ...*HTMLElement) *HTMLElement {
-	for _, child := range children {
-		e.Children = append(e.Children, child)
-	}
+	e.Children = append(e.Children, children...)
 	return e
 }
 
@@ -42,9 +40,7 @@ func (e *HTMLElement) AddAttributes(attributes A) *HTMLElement {
 }
 
 func (e *HTMLElement) AddClasses(classes ...string) *HTMLElement {
-	for _, class := range classes {
-		e.Classes = append(e.Classes, class)
-	}
+	e.Classes = append(e.Classes, classes...)
 	return e
 }
 
